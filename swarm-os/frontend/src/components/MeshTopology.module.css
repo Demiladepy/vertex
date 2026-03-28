@@ -1,0 +1,99 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.heading {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-2);
+}
+
+.svgWrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+/* ── SVG elements ─────────────────────────────────────────────────────────── */
+
+.edgeLine {
+  stroke: #2d3148;
+  stroke-width: 1.5;
+  transition: stroke 0.2s;
+}
+
+.edgePulsing {
+  stroke: var(--blue);
+  stroke-width: 2;
+  animation: edgePulse 0.5s ease-in-out;
+}
+
+.edgeHalt {
+  stroke: var(--red);
+  animation: haltRipple 0.4s ease-out forwards;
+}
+
+/* Node base */
+.nodeCircle {
+  stroke: #2d3148;
+  stroke-width: 2;
+  transition: fill 0.4s, stroke 0.3s;
+}
+
+.nodeHalted {
+  stroke: var(--red);
+  stroke-width: 3;
+  animation: nodeHaltGlow 1.4s ease-in-out infinite;
+}
+
+.nodeFault {
+  stroke: var(--amber);
+  stroke-width: 2.5;
+}
+
+/* Source ripple circle — child of node <g> */
+.sourceRipple {
+  fill: none;
+  stroke: var(--red);
+  stroke-width: 2;
+  transform-origin: center;
+  animation: sourceRippleExpand 1s ease-out forwards;
+}
+
+/* Labels */
+.nodeId {
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--text);
+  dominant-baseline: middle;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.nodeType {
+  font-family: var(--font);
+  font-size: 9px;
+  fill: var(--text-2);
+  dominant-baseline: middle;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* Latency label on edges */
+.latencyLabel {
+  font-family: var(--font);
+  font-size: 9px;
+  fill: var(--red);
+  dominant-baseline: middle;
+  text-anchor: middle;
+  pointer-events: none;
+  animation: fadeIn 0.3s ease-out;
+}

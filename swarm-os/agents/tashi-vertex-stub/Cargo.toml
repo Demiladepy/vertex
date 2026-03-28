@@ -1,0 +1,11 @@
+[package]
+# Package name MUST be "tashi-vertex" so the Rust module is `tashi_vertex`,
+# matching the `use tashi_vertex::*` imports in main.rs.
+# To swap in the real SDK: change agents/Cargo.toml tashi-vertex dep from
+# `path = "tashi-vertex-stub"` to `version = "…"`.
+name    = "tashi-vertex"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1", features = ["net", "rt", "sync", "macros"] }

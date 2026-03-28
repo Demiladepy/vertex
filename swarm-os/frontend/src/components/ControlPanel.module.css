@@ -1,0 +1,98 @@
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.heading {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-2);
+}
+
+.buttonRow {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+/* ── Base button ──────────────────────────────────────────────────────────── */
+.btn {
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+
+.btn:hover   { background: #2a2f47; }
+.btn:active  { opacity: 0.75; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btnFault {
+  border-color: var(--red);
+  color: var(--red);
+}
+.btnFault:hover { background: rgba(248,81,73,0.1); }
+
+.btnRecover {
+  border-color: var(--green);
+  color: var(--green);
+}
+.btnRecover:hover { background: rgba(63,185,80,0.1); }
+
+.btnPost {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+.btnPost:hover { background: rgba(88,166,255,0.1); }
+
+/* ── Inline task form ─────────────────────────────────────────────────────── */
+.form {
+  display: flex;
+  gap: 0.5rem;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.input {
+  flex: 1;
+  font-family: var(--font);
+  font-size: 0.8rem;
+  padding: 0.4rem 0.7rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  outline: none;
+  min-width: 0;
+}
+
+.input:focus {
+  border-color: var(--blue);
+}
+
+.input::placeholder { color: var(--text-3); }
+
+/* ── Status / feedback ────────────────────────────────────────────────────── */
+.feedback {
+  font-size: 0.72rem;
+  color: var(--text-2);
+  min-height: 1rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.feedbackOk  { color: var(--green); }
+.feedbackErr { color: var(--red);   }

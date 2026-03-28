@@ -1,0 +1,133 @@
+version: "3.9"
+
+# Port allocation
+# ─────────────────────────────────────────
+# 3001        backend  REST + WebSocket
+# 5173        frontend Vite dev server
+# 9001-9005   Vertex UDP mesh (one per agent)
+# 8001-8005   Agent HTTP safety inlet
+
+services:
+
+  # ── Backend ────────────────────────────────────────────────────────────────
+  backend:
+    build: ./backend
+    ports:
+      - "3001:3001"
+    environment:
+      PORT:            "3001"
+      EXPECTED_AGENTS: "5"
+      AGENT_NETWORK:   "docker"
+    restart: unless-stopped
+    healthcheck:
+      test:     ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
+      interval: 8s
+      timeout:  4s
+      retries:  5
+      start_period: 5s
+
+  # ── agent-drone-1 ──────────────────────────────────────────────────────────
+  agent-drone-1:
+    build: ./agents
+    ports:
+      - "9001:9001/udp"
+      - "8001:8001"
+    environment:
+      AGENT_ID:        "drone-1"
+      AGENT_TYPE:      "drone"
+      AGENT_PORT:      "9001"
+      AGENT_HTTP_PORT: "8001"
+      PEER_ADDRS:      "agent-drone-2:9002,agent-amr-1:9003,agent-ground-station-1:9004,agent-iot-sensor-1:9005"
+      PEER_IDS:        "drone-2,amr-1,ground-station-1,iot-sensor-1"
+      BACKEND_URL:     "http://backend:3001"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── agent-drone-2 ──────────────────────────────────────────────────────────
+  agent-drone-2:
+    build: ./agents
+    ports:
+      - "9002:9002/udp"
+      - "8002:8002"
+    environment:
+      AGENT_ID:        "drone-2"
+      AGENT_TYPE:      "drone"
+      AGENT_PORT:      "9002"
+      AGENT_HTTP_PORT: "8002"
+      PEER_ADDRS:      "agent-drone-1:9001,agent-amr-1:9003,agent-ground-station-1:9004,agent-iot-sensor-1:9005"
+      PEER_IDS:        "drone-1,amr-1,ground-station-1,iot-sensor-1"
+      BACKEND_URL:     "http://backend:3001"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── agent-amr-1 ────────────────────────────────────────────────────────────
+  agent-amr-1:
+    build: ./agents
+    ports:
+      - "9003:9003/udp"
+      - "8003:8003"
+    environment:
+      AGENT_ID:        "amr-1"
+      AGENT_TYPE:      "amr"
+      AGENT_PORT:      "9003"
+      AGENT_HTTP_PORT: "8003"
+      PEER_ADDRS:      "agent-drone-1:9001,agent-drone-2:9002,agent-ground-station-1:9004,agent-iot-sensor-1:9005"
+      PEER_IDS:        "drone-1,drone-2,ground-station-1,iot-sensor-1"
+      BACKEND_URL:     "http://backend:3001"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── agent-ground-station-1 ─────────────────────────────────────────────────
+  agent-ground-station-1:
+    build: ./agents
+    ports:
+      - "9004:9004/udp"
+      - "8004:8004"
+    environment:
+      AGENT_ID:        "ground-station-1"
+      AGENT_TYPE:      "ground_station"
+      AGENT_PORT:      "9004"
+      AGENT_HTTP_PORT: "8004"
+      PEER_ADDRS:      "agent-drone-1:9001,agent-drone-2:9002,agent-amr-1:9003,agent-iot-sensor-1:9005"
+      PEER_IDS:        "drone-1,drone-2,amr-1,iot-sensor-1"
+      BACKEND_URL:     "http://backend:3001"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── agent-iot-sensor-1 ─────────────────────────────────────────────────────
+  agent-iot-sensor-1:
+    build: ./agents
+    ports:
+      - "9005:9005/udp"
+      - "8005:8005"
+    environment:
+      AGENT_ID:        "iot-sensor-1"
+      AGENT_TYPE:      "iot_sensor"
+      AGENT_PORT:      "9005"
+      AGENT_HTTP_PORT: "8005"
+      PEER_ADDRS:      "agent-drone-1:9001,agent-drone-2:9002,agent-amr-1:9003,agent-ground-station-1:9004"
+      PEER_IDS:        "drone-1,drone-2,amr-1,ground-station-1"
+      BACKEND_URL:     "http://backend:3001"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── frontend ───────────────────────────────────────────────────────────────
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    environment:
+      BACKEND_HOST: "backend"
+    depends_on:
+      - backend
+    restart: unless-stopped

@@ -1,0 +1,122 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  font-size: 0.8rem;
+  color: var(--text-2);
+}
+
+.liveDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-left: 0.25rem;
+}
+
+.liveConnected {
+  background: var(--green);
+  animation: livePulse 1.8s ease-in-out infinite;
+}
+
+.liveDisconnected {
+  background: var(--amber);
+}
+
+.liveLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-2);
+}
+
+/* ── Waiting banner ───────────────────────────────────────────────────────── */
+.waitingBanner {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 0.4rem 1rem;
+  flex-shrink: 0;
+}
+
+.waitingDot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+  margin-right: 0.5rem;
+  animation: livePulse 1.2s ease-in-out infinite;
+}
+
+/* ── Halt banner ──────────────────────────────────────────────────────────── */
+.haltBanner {
+  background: var(--red);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  animation: haltBannerPulse 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* ── Main layout ──────────────────────────────────────────────────────────── */
+.main {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: 1rem;
+  padding: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.right {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .main { grid-template-columns: 1fr; }
+}
