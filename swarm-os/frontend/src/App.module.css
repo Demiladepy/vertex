@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.25rem;
+  padding: 0.7rem 1.25rem;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
   flex-shrink: 0;
@@ -19,47 +19,72 @@
 .titleGroup {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.85rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.logoHex {
+  font-size: 1.4rem;
+  color: var(--blue);
+  line-height: 1;
 }
 
 .title {
-  font-size: 1.3rem;
-  font-weight: 700;
+  font-size: 1.2rem;
+  font-weight: 800;
   color: var(--blue);
   letter-spacing: -0.5px;
 }
 
 .subtitle {
-  font-size: 0.8rem;
-  color: var(--text-2);
+  font-size: 0.75rem;
+  color: var(--text-3);
+  padding-left: 0.5rem;
+  border-left: 1px solid var(--border);
 }
 
-.liveDot {
-  width: 9px;
-  height: 9px;
+.statusGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.haltPill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  background: rgba(248,81,73,0.15);
+  color: var(--red);
+  border: 1px solid rgba(248,81,73,0.3);
+  border-radius: 5px;
+  letter-spacing: 0.06em;
+  animation: haltBannerPulse 1.4s ease-in-out infinite;
+}
+
+.connDot {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
-  margin-left: 0.25rem;
 }
 
-.liveConnected {
-  background: var(--green);
-  animation: livePulse 1.8s ease-in-out infinite;
-}
+.connOn  { background: var(--green); animation: livePulse 1.8s ease-in-out infinite; }
+.connOff { background: var(--amber); }
 
-.liveDisconnected {
-  background: var(--amber);
-}
-
-.liveLabel {
-  font-size: 0.7rem;
+.connLabel {
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   color: var(--text-2);
 }
 
-/* ── Waiting banner ───────────────────────────────────────────────────────── */
-.waitingBanner {
+/* ── Banners ──────────────────────────────────────────────────────────────── */
+.waitBanner {
   background: var(--surface2);
   border-bottom: 1px solid var(--border);
   color: var(--text-2);
@@ -67,32 +92,35 @@
   text-align: center;
   padding: 0.4rem 1rem;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
-.waitingDot {
-  display: inline-block;
+.waitDot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: var(--amber);
-  margin-right: 0.5rem;
   animation: livePulse 1.2s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
-/* ── Halt banner ──────────────────────────────────────────────────────────── */
 .haltBanner {
-  background: var(--red);
-  color: #fff;
-  font-size: 0.85rem;
+  background: rgba(248,81,73,0.12);
+  border-bottom: 1px solid rgba(248,81,73,0.35);
+  color: var(--red);
+  font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-align: center;
-  padding: 0.5rem 1rem;
+  padding: 0.45rem 1rem;
   animation: haltBannerPulse 1.4s ease-in-out infinite;
   flex-shrink: 0;
 }
 
-/* ── Main layout ──────────────────────────────────────────────────────────── */
+/* ── Dashboard layout ─────────────────────────────────────────────────────── */
 .main {
   display: grid;
   grid-template-columns: 420px 1fr;
@@ -117,6 +145,16 @@
   overflow: hidden;
 }
 
+/* ── Other views ──────────────────────────────────────────────────────────── */
+.viewWrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 @media (max-width: 900px) {
   .main { grid-template-columns: 1fr; }
+  .subtitle { display: none; }
 }

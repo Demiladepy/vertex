@@ -1,0 +1,57 @@
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 1.25rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.tab {
+  font-family: var(--font);
+  font-size: 0.77rem;
+  font-weight: 600;
+  padding: 0.65rem 1.1rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: color 0.15s, border-color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: -1px;
+  white-space: nowrap;
+}
+
+.tab:hover { color: var(--text); }
+.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+.tabIcon { font-size: 0.85rem; opacity: 0.7; }
+.active .tabIcon { opacity: 1; }
+
+.badge {
+  font-size: 0.6rem;
+  background: var(--surface2);
+  color: var(--text-2);
+  border-radius: 999px;
+  padding: 1px 6px;
+  min-width: 18px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+
+.badgeRed {
+  background: rgba(248,81,73,0.18);
+  color: var(--red);
+  border-color: rgba(248,81,73,0.4);
+}
+
+.badgeAmber {
+  background: rgba(227,179,65,0.15);
+  color: var(--amber);
+  border-color: rgba(227,179,65,0.3);
+}

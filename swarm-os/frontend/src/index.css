@@ -5,10 +5,10 @@
 }
 
 :root {
-  --bg:        #0f1117;
-  --surface:   #1a1d27;
-  --surface2:  #22263a;
-  --border:    #2d3148;
+  --bg:        #0d1117;
+  --surface:   #161b22;
+  --surface2:  #21262d;
+  --border:    #30363d;
   --text:      #e6edf3;
   --text-2:    #8b949e;
   --text-3:    #484f58;
@@ -16,7 +16,7 @@
   --amber:     #e3b341;
   --red:       #f85149;
   --blue:      #58a6ff;
-  --purple:    #a371f7;
+  --purple:    #bc8cff;
   --font:      'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
 }
 
@@ -30,15 +30,13 @@ html, body, #root {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-/* Global animations */
 @keyframes livePulse {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.5; transform: scale(0.75); }
+  50%       { opacity: 0.45; transform: scale(0.7); }
 }
 
 @keyframes haltBorderPulse {
@@ -48,7 +46,7 @@ html, body, #root {
 
 @keyframes winFlash {
   0%   { box-shadow: 0 0 0 0   rgba(227,179,65,0.9); border-color: #e3b341; }
-  40%  { box-shadow: 0 0 16px 4px rgba(227,179,65,0.4); border-color: #e3b341; }
+  40%  { box-shadow: 0 0 20px 5px rgba(227,179,65,0.35); border-color: #e3b341; }
   100% { box-shadow: none; }
 }
 
@@ -64,11 +62,11 @@ html, body, #root {
 
 @keyframes haltBannerPulse {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0.85; }
+  50%       { opacity: 0.82; }
 }
 
 @keyframes edgePulse {
-  0%, 100% { opacity: 0.25; }
+  0%, 100% { opacity: 0.2; }
   50%       { opacity: 0.9; }
 }
 
@@ -84,5 +82,15 @@ html, body, #root {
 
 @keyframes nodeHaltGlow {
   0%, 100% { filter: drop-shadow(0 0 6px  rgba(248,81,73,0.8)); }
-  50%       { filter: drop-shadow(0 0 18px rgba(248,81,73,1));   }
+  50%       { filter: drop-shadow(0 0 20px rgba(248,81,73,1));   }
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

@@ -1,6 +1,22 @@
 import { useRef, useState } from 'react';
 import styles from './ControlPanel.module.css';
 
+const FAULT_TYPES = [
+  { value: 'obstacle_detected',  label: 'Obstacle detected' },
+  { value: 'sensor_fault',       label: 'Sensor fault' },
+  { value: 'comm_loss',          label: 'Comm loss' },
+  { value: 'power_critical',     label: 'Power critical' },
+  { value: 'collision_risk',     label: 'Collision risk' },
+];
+
+const QUICK_TASKS = [
+  'Scan sector A for obstacles',
+  'Deliver payload to zone 3',
+  'Recharge at station 2',
+  'Survey perimeter',
+  'Calibrate sensors',
+];
+
 async function apiPost(path, body) {
   const res = await fetch(path, {
     method:  'POST',
@@ -11,20 +27,39 @@ async function apiPost(path, body) {
   return res.json();
 }
 
-export default function ControlPanel() {
-  const [showForm,  setShowForm]  = useState(false);
-  const [desc,      setDesc]      = useState('');
-  const [busy,      setBusy]      = useState(false);
-  const [feedback,  setFeedback]  = useState(null);  // { ok: bool, msg: string }
+export default function ControlPanel({ agents = {}, onAction }) {
+  const [showForm,    setShowForm]    = useState(false);
+  const [showFault,   setShowFault]   = useState(false);
+  const [desc,        setDesc]        = useState('');
+  const [faultType,   setFaultType]   = useState(FAULT_TYPES[0].value);
+  const [faultSource, setFaultSource] = useState('');
+  const [busy,        setBusy]        = useState(false);
+  const [feedback,    setFeedback]    = useState(null);
   const inputRef = useRef(null);
+
+  const agentIds = Object.keys(agents);
 
   function flash(ok, msg) {
     setFeedback({ ok, msg });
-    setTimeout(() => setFeedback(null), 3000);
+    setTimeout(() => setFeedback(null), 3500);
   }
 
   function openForm() {
+    setShowFault(false);
     setShowForm(true);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  }
+
+  function openFault() {
+    setShowForm(false);
+    setShowFault(v => !v);
+    if (!faultSource && agentIds.length > 0) {
+      setFaultSource(agentIds[0]);
+    }
+  }
+
+  function pickQuick(task) {
+    setDesc(task);
     setTimeout(() => inputRef.current?.focus(), 50);
   }
 
@@ -34,7 +69,7 @@ export default function ControlPanel() {
     setBusy(true);
     try {
       await apiPost('/api/task', { description: desc.trim() });
-      flash(true, `Task posted: "${desc.trim()}"`);
+      onAction?.('success', `Task posted: "${desc.trim().slice(0, 40)}"`);
       setDesc('');
       setShowForm(false);
     } catch (err) {
@@ -46,13 +81,15 @@ export default function ControlPanel() {
 
   async function injectFault() {
     setBusy(true);
+    const src = faultSource || agentIds[0] || 'iot-sensor-1';
     try {
       await apiPost('/api/safety-signal', {
-        source_agent_id: 'iot-sensor-1',
-        fault_type:      'obstacle_detected',
+        source_agent_id: src,
+        fault_type:      faultType,
         detected_at_ms:  Date.now(),
       });
-      flash(true, 'Safety halt injected');
+      onAction?.('warning', `Safety halt: ${faultType} from ${src}`);
+      setShowFault(false);
     } catch (err) {
       flash(false, `Error: ${err.message}`);
     } finally {
@@ -64,7 +101,7 @@ export default function ControlPanel() {
     setBusy(true);
     try {
       await apiPost('/api/recover', {});
-      flash(true, 'Swarm recovered');
+      onAction?.('success', 'Swarm recovered');
     } catch (err) {
       flash(false, `Error: ${err.message}`);
     } finally {
@@ -78,7 +115,7 @@ export default function ControlPanel() {
 
       <div className={styles.buttonRow}>
         <button
-          className={`${styles.btn} ${styles.btnPost}`}
+          className={`${styles.btn} ${styles.btnPost} ${showForm ? styles.btnActive : ''}`}
           onClick={showForm ? () => setShowForm(false) : openForm}
           disabled={busy}
         >
@@ -86,8 +123,8 @@ export default function ControlPanel() {
         </button>
 
         <button
-          className={`${styles.btn} ${styles.btnFault}`}
-          onClick={injectFault}
+          className={`${styles.btn} ${styles.btnFault} ${showFault ? styles.btnActive : ''}`}
+          onClick={openFault}
           disabled={busy}
         >
           ⚡ Inject fault
@@ -98,29 +135,90 @@ export default function ControlPanel() {
           onClick={recoverSwarm}
           disabled={busy}
         >
-          ↺ Recover swarm
+          ↺ Recover
         </button>
       </div>
 
+      {/* Task form */}
       {showForm && (
-        <form className={styles.form} onSubmit={submitTask}>
-          <input
-            ref={inputRef}
-            className={styles.input}
-            placeholder="Task description…"
-            value={desc}
-            onChange={e => setDesc(e.target.value)}
-            disabled={busy}
-            maxLength={120}
-          />
-          <button
-            type="submit"
-            className={`${styles.btn} ${styles.btnPost}`}
-            disabled={busy || !desc.trim()}
-          >
-            Send
-          </button>
-        </form>
+        <div className={styles.formPanel}>
+          <form className={styles.form} onSubmit={submitTask}>
+            <input
+              ref={inputRef}
+              className={styles.input}
+              placeholder="Task description…"
+              value={desc}
+              onChange={e => setDesc(e.target.value)}
+              disabled={busy}
+              maxLength={120}
+            />
+            <button
+              type="submit"
+              className={`${styles.btn} ${styles.btnPost}`}
+              disabled={busy || !desc.trim()}
+            >
+              Send
+            </button>
+          </form>
+
+          <div className={styles.quickRow}>
+            <span className={styles.quickLabel}>Quick:</span>
+            {QUICK_TASKS.map(q => (
+              <button
+                key={q}
+                className={styles.quickBtn}
+                type="button"
+                onClick={() => pickQuick(q)}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Fault form */}
+      {showFault && (
+        <div className={styles.formPanel}>
+          <div className={styles.faultRow}>
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel}>Fault type</label>
+              <select
+                className={styles.select}
+                value={faultType}
+                onChange={e => setFaultType(e.target.value)}
+                disabled={busy}
+              >
+                {FAULT_TYPES.map(f => (
+                  <option key={f.value} value={f.value}>{f.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel}>Source agent</label>
+              <select
+                className={styles.select}
+                value={faultSource}
+                onChange={e => setFaultSource(e.target.value)}
+                disabled={busy || agentIds.length === 0}
+              >
+                {agentIds.length === 0
+                  ? <option value="">No agents</option>
+                  : agentIds.map(id => <option key={id} value={id}>{id}</option>)
+                }
+              </select>
+            </div>
+
+            <button
+              className={`${styles.btn} ${styles.btnFault}`}
+              onClick={injectFault}
+              disabled={busy || agentIds.length === 0}
+            >
+              Inject
+            </button>
+          </div>
+        </div>
       )}
 
       {feedback && (
