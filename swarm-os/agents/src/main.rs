@@ -191,16 +191,19 @@ async fn main() -> anyhow::Result<()> {
                     continue;
                 }
 
-                // Battery drain
+                // Battery drain: 0.08 %/s working (0.16 per 2 s tick),
+                //               0.015 %/s idle  (0.03 per 2 s tick).
+                // Halted agents consume minimal power.
                 match state.status.as_str() {
-                    "working" => state.battery = (state.battery - 0.1).max(0.0),
-                    _         => state.battery = (state.battery - 0.02).max(0.0),
+                    "working" => state.battery = (state.battery - 0.16).max(5.0),
+                    "halted"  => state.battery = (state.battery - 0.01).max(5.0),
+                    _         => state.battery = (state.battery - 0.03).max(5.0),
                 }
 
-                // Fault condition: battery critically low
-                if state.battery < 5.0 && state.status != "fault" {
+                // Fault condition: battery at floor (≤ 5 %) — signal distress.
+                if state.battery <= 5.0 && state.status != "fault" && state.status != "halted" {
                     state.status = "fault".into();
-                    println!("[{}] FAULT — battery critical ({:.1}%)", state.id, state.battery);
+                    eprintln!("[{}] FAULT — battery critical ({:.1}%)", state.id, state.battery);
                 }
 
                 let tick_ts = now_ms();

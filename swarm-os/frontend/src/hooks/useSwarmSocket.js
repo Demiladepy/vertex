@@ -104,13 +104,33 @@ function reducer(state, action) {
         detected_at_ms:  action.payload.detected_at_ms ?? Date.now(),
         acks:            [],
       };
+      // Immediately mark every known agent halted — don't wait for individual
+      // AGENT_UPDATE events which arrive up to 2 s later.
+      const agents = Object.fromEntries(
+        Object.entries(state.agents).map(([id, a]) => [
+          id, a.status === 'offline' ? a : { ...a, status: 'halted', current_task: null },
+        ])
+      );
       return {
         ...state,
+        agents,
         isHalted:     true,
         lastHalt:     { ...action.payload, _seq: ++_haltSeq },
         safetyEvents: [haltEvent, ...state.safetyEvents].slice(0, 20),
       };
     }
+
+    case 'AGENT_OFFLINE':
+      return {
+        ...state,
+        agents: {
+          ...state.agents,
+          [action.payload.agentId]: {
+            ...(state.agents[action.payload.agentId] ?? { id: action.payload.agentId }),
+            status: 'offline',
+          },
+        },
+      };
 
     case 'SAFETY_ACK': {
       const safetyEvents = state.safetyEvents.map((e, i) => {

@@ -20,11 +20,11 @@ services:
       AGENT_NETWORK:   "docker"
     restart: unless-stopped
     healthcheck:
-      test:     ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
-      interval: 8s
-      timeout:  4s
-      retries:  5
-      start_period: 5s
+      test:     ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3001/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
+      interval: 5s
+      timeout:  3s
+      retries:  8
+      start_period: 8s
 
   # ── agent-drone-1 ──────────────────────────────────────────────────────────
   agent-drone-1:

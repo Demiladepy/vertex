@@ -33,7 +33,7 @@ RUN touch src/main.rs src/types.rs src/auction.rs tashi-vertex-stub/src/lib.rs \
 # ── Stage 3: minimal runtime image ───────────────────────────────────────────
 FROM debian:bookworm-slim
 RUN apt-get update \
- && apt-get install -y --no-install-recommends ca-certificates \
+ && apt-get install -y --no-install-recommends ca-certificates libssl3 \
  && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/target/release/swarm-agent /usr/local/bin/swarm-agent
 CMD ["swarm-agent"]

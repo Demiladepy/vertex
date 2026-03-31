@@ -37,7 +37,9 @@ const metrics = {
 // ── Agent helpers ─────────────────────────────────────────────────────────────
 
 function upsertAgent(agentState) {
-  agents.set(agentState.id, agentState);
+  // Stamp server-side receive time so offline detection works even when
+  // the agent's own clock is skewed or the field is missing.
+  agents.set(agentState.id, { ...agentState, lastSeenMs: Date.now() });
 
   // Register HTTP endpoint for direct safety injection if port is known.
   // Agent reports http_port in its state payload.
