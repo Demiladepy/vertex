@@ -2,11 +2,11 @@ import { useRef, useState } from 'react';
 import styles from './ControlPanel.module.css';
 
 const FAULT_TYPES = [
-  { value: 'obstacle_detected',  label: 'Obstacle detected' },
-  { value: 'sensor_fault',       label: 'Sensor fault' },
-  { value: 'comm_loss',          label: 'Comm loss' },
-  { value: 'power_critical',     label: 'Power critical' },
-  { value: 'collision_risk',     label: 'Collision risk' },
+  { value: 'obstacle_detected', label: 'Obstacle detected' },
+  { value: 'sensor_fault',      label: 'Sensor fault' },
+  { value: 'comm_loss',         label: 'Comm loss' },
+  { value: 'power_critical',    label: 'Power critical' },
+  { value: 'collision_risk',    label: 'Collision risk' },
 ];
 
 const QUICK_TASKS = [
@@ -19,20 +19,19 @@ const QUICK_TASKS = [
 
 async function apiPost(path, body) {
   const res = await fetch(path, {
-    method:  'POST',
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify(body),
+    body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
   return res.json();
 }
 
 export default function ControlPanel({ agents = {}, onAction }) {
-  const [showForm,    setShowForm]    = useState(false);
-  const [showFault,   setShowFault]   = useState(false);
   const [desc,        setDesc]        = useState('');
   const [faultType,   setFaultType]   = useState(FAULT_TYPES[0].value);
   const [faultSource, setFaultSource] = useState('');
+  const [panel,       setPanel]       = useState(null); // 'task' | 'fault' | null
   const [busy,        setBusy]        = useState(false);
   const [feedback,    setFeedback]    = useState(null);
   const inputRef = useRef(null);
@@ -44,23 +43,13 @@ export default function ControlPanel({ agents = {}, onAction }) {
     setTimeout(() => setFeedback(null), 3500);
   }
 
-  function openForm() {
-    setShowFault(false);
-    setShowForm(true);
-    setTimeout(() => inputRef.current?.focus(), 50);
-  }
-
-  function openFault() {
-    setShowForm(false);
-    setShowFault(v => !v);
-    if (!faultSource && agentIds.length > 0) {
-      setFaultSource(agentIds[0]);
-    }
-  }
-
-  function pickQuick(task) {
-    setDesc(task);
-    setTimeout(() => inputRef.current?.focus(), 50);
+  function togglePanel(name) {
+    setPanel(p => {
+      if (p === name) return null;
+      if (name === 'task') setTimeout(() => inputRef.current?.focus(), 40);
+      if (name === 'fault' && !faultSource && agentIds.length > 0) setFaultSource(agentIds[0]);
+      return name;
+    });
   }
 
   async function submitTask(e) {
@@ -71,9 +60,9 @@ export default function ControlPanel({ agents = {}, onAction }) {
       await apiPost('/api/task', { description: desc.trim() });
       onAction?.('success', `Task posted: "${desc.trim().slice(0, 40)}"`);
       setDesc('');
-      setShowForm(false);
+      setPanel(null);
     } catch (err) {
-      flash(false, `Error: ${err.message}`);
+      flash(false, err.message);
     } finally {
       setBusy(false);
     }
@@ -85,13 +74,13 @@ export default function ControlPanel({ agents = {}, onAction }) {
     try {
       await apiPost('/api/safety-signal', {
         source_agent_id: src,
-        fault_type:      faultType,
-        detected_at_ms:  Date.now(),
+        fault_type: faultType,
+        detected_at_ms: Date.now(),
       });
       onAction?.('warning', `Safety halt: ${faultType} from ${src}`);
-      setShowFault(false);
+      setPanel(null);
     } catch (err) {
-      flash(false, `Error: ${err.message}`);
+      flash(false, err.message);
     } finally {
       setBusy(false);
     }
@@ -103,7 +92,7 @@ export default function ControlPanel({ agents = {}, onAction }) {
       await apiPost('/api/recover', {});
       onAction?.('success', 'Swarm recovered');
     } catch (err) {
-      flash(false, `Error: ${err.message}`);
+      flash(false, err.message);
     } finally {
       setBusy(false);
     }
@@ -111,23 +100,32 @@ export default function ControlPanel({ agents = {}, onAction }) {
 
   return (
     <div className={styles.panel}>
-      <span className={styles.heading}>Controls</span>
+      <div className={styles.heading}>
+        <span className={styles.headingLabel}>Controls</span>
+      </div>
 
-      <div className={styles.buttonRow}>
+      {/* ── Action buttons ────────────────────────────────────────────────── */}
+      <div className={styles.btnRow}>
         <button
-          className={`${styles.btn} ${styles.btnPost} ${showForm ? styles.btnActive : ''}`}
-          onClick={showForm ? () => setShowForm(false) : openForm}
+          className={`${styles.btn} ${styles.btnPost} ${panel === 'task' ? styles.btnActive : ''}`}
+          onClick={() => togglePanel('task')}
           disabled={busy}
         >
-          {showForm ? '✕ Cancel' : '+ Post task'}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Post task
         </button>
 
         <button
-          className={`${styles.btn} ${styles.btnFault} ${showFault ? styles.btnActive : ''}`}
-          onClick={openFault}
+          className={`${styles.btn} ${styles.btnFault} ${panel === 'fault' ? styles.btnActive : ''}`}
+          onClick={() => togglePanel('fault')}
           disabled={busy}
         >
-          ⚡ Inject fault
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+          </svg>
+          Inject fault
         </button>
 
         <button
@@ -135,18 +133,22 @@ export default function ControlPanel({ agents = {}, onAction }) {
           onClick={recoverSwarm}
           disabled={busy}
         >
-          ↺ Recover
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <polyline points="23 4 23 10 17 10" />
+            <path d="M20.5 15a9 9 0 1 1-2.7-7.8L23 10" />
+          </svg>
+          Recover
         </button>
       </div>
 
-      {/* Task form */}
-      {showForm && (
-        <div className={styles.formPanel}>
-          <form className={styles.form} onSubmit={submitTask}>
+      {/* ── Post task panel ───────────────────────────────────────────────── */}
+      {panel === 'task' && (
+        <div className={styles.subPanel}>
+          <form className={styles.taskForm} onSubmit={submitTask}>
             <input
               ref={inputRef}
               className={styles.input}
-              placeholder="Task description…"
+              placeholder="Describe the task…"
               value={desc}
               onChange={e => setDesc(e.target.value)}
               disabled={busy}
@@ -161,27 +163,29 @@ export default function ControlPanel({ agents = {}, onAction }) {
             </button>
           </form>
 
-          <div className={styles.quickRow}>
-            <span className={styles.quickLabel}>Quick:</span>
-            {QUICK_TASKS.map(q => (
-              <button
-                key={q}
-                className={styles.quickBtn}
-                type="button"
-                onClick={() => pickQuick(q)}
-              >
-                {q}
-              </button>
-            ))}
+          <div className={styles.quickList}>
+            <span className={styles.quickLabel}>Quick pick</span>
+            <div className={styles.quickBtns}>
+              {QUICK_TASKS.map(q => (
+                <button
+                  key={q}
+                  type="button"
+                  className={styles.quickBtn}
+                  onClick={() => { setDesc(q); setTimeout(() => inputRef.current?.focus(), 40); }}
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Fault form */}
-      {showFault && (
-        <div className={styles.formPanel}>
-          <div className={styles.faultRow}>
-            <div className={styles.fieldGroup}>
+      {/* ── Fault injection panel ─────────────────────────────────────────── */}
+      {panel === 'fault' && (
+        <div className={styles.subPanel}>
+          <div className={styles.faultFields}>
+            <div className={styles.field}>
               <label className={styles.fieldLabel}>Fault type</label>
               <select
                 className={styles.select}
@@ -195,7 +199,7 @@ export default function ControlPanel({ agents = {}, onAction }) {
               </select>
             </div>
 
-            <div className={styles.fieldGroup}>
+            <div className={styles.field}>
               <label className={styles.fieldLabel}>Source agent</label>
               <select
                 className={styles.select}
@@ -204,27 +208,31 @@ export default function ControlPanel({ agents = {}, onAction }) {
                 disabled={busy || agentIds.length === 0}
               >
                 {agentIds.length === 0
-                  ? <option value="">No agents</option>
+                  ? <option value="">No agents online</option>
                   : agentIds.map(id => <option key={id} value={id}>{id}</option>)
                 }
               </select>
             </div>
-
-            <button
-              className={`${styles.btn} ${styles.btnFault}`}
-              onClick={injectFault}
-              disabled={busy || agentIds.length === 0}
-            >
-              Inject
-            </button>
           </div>
+
+          <button
+            className={`${styles.btn} ${styles.btnFault} ${styles.btnFull}`}
+            onClick={injectFault}
+            disabled={busy || agentIds.length === 0}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+            </svg>
+            Inject fault now
+          </button>
         </div>
       )}
 
+      {/* ── Feedback ─────────────────────────────────────────────────────── */}
       {feedback && (
-        <p className={`${styles.feedback} ${feedback.ok ? styles.feedbackOk : styles.feedbackErr}`}>
+        <div className={`${styles.feedback} ${feedback.ok ? styles.feedbackOk : styles.feedbackErr}`}>
           {feedback.msg}
-        </p>
+        </div>
       )}
     </div>
   );

@@ -5,49 +5,114 @@
 }
 
 :root {
-  --bg:        #0d1117;
-  --surface:   #161b22;
-  --surface2:  #21262d;
-  --border:    #30363d;
-  --text:      #e6edf3;
-  --text-2:    #8b949e;
-  --text-3:    #484f58;
-  --green:     #3fb950;
-  --amber:     #e3b341;
-  --red:       #f85149;
-  --blue:      #58a6ff;
-  --purple:    #bc8cff;
-  --font:      'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+  /* ── Backgrounds ────────────────────────────────────────────────── */
+  --bg-void:    #070a0f;
+  --bg-base:    #0b0f18;
+  --bg-surface: #0f1520;
+  --bg-raised:  #141c2b;
+  --bg-overlay: #1a2438;
+
+  /* ── Borders ────────────────────────────────────────────────────── */
+  --border-dim: #151e2e;
+  --border:     #1c2840;
+  --border-hi:  #263550;
+
+  /* ── Text ───────────────────────────────────────────────────────── */
+  --text:       #dce8f5;
+  --text-2:     #6b7f99;
+  --text-3:     #2f3f55;
+
+  /* ── Accent (electric blue) ─────────────────────────────────────── */
+  --accent:        #3d84f5;
+  --accent-dim:    rgba(61,132,245,0.14);
+  --accent-glow:   rgba(61,132,245,0.28);
+
+  /* ── Status colours ─────────────────────────────────────────────── */
+  --green:         #22d47a;
+  --green-dim:     rgba(34,212,122,0.12);
+  --green-glow:    rgba(34,212,122,0.25);
+
+  --amber:         #f5a623;
+  --amber-dim:     rgba(245,166,35,0.12);
+
+  --red:           #f04f5a;
+  --red-dim:       rgba(240,79,90,0.12);
+  --red-glow:      rgba(240,79,90,0.3);
+
+  --purple:        #a78bfa;
+  --purple-dim:    rgba(167,139,250,0.12);
+
+  --blue:          #60b4ff;
+
+  /* ── Agent type colours ─────────────────────────────────────────── */
+  --drone-color:   #60b4ff;
+  --amr-color:     #22d47a;
+  --ground-color:  #f5a623;
+  --iot-color:     #a78bfa;
+
+  /* ── Typography ─────────────────────────────────────────────────── */
+  --font-ui:   'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+
+  /* ── Layout ─────────────────────────────────────────────────────── */
+  --topbar-h:   52px;
+  --gap:        12px;
+  --gap-sm:     8px;
+  --gap-lg:     20px;
+  --radius-sm:  6px;
+  --radius:     10px;
+  --radius-lg:  14px;
+
+  /* ── Legacy aliases (keep existing components working) ──────────── */
+  --bg:       var(--bg-base);
+  --surface:  var(--bg-surface);
+  --surface2: var(--bg-raised);
+  --border-old: var(--border);
+  --font:     var(--font-mono);
 }
 
 html, body, #root {
   height: 100%;
-  background: var(--bg);
+  background: var(--bg-void);
   color: var(--text);
-  font-family: var(--font);
+  font-family: var(--font-ui);
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-hi); }
+
+/* ── Global animations ──────────────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
 @keyframes livePulse {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.45; transform: scale(0.7); }
+  50%       { opacity: 0.4; transform: scale(0.65); }
 }
 
-@keyframes haltBorderPulse {
-  0%, 100% { box-shadow: 0 0 0 0   rgba(248,81,73,0.8); border-color: var(--red); }
-  50%       { box-shadow: 0 0 0 6px rgba(248,81,73,0);   border-color: var(--red); }
+@keyframes haltBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.7; }
 }
 
 @keyframes winFlash {
-  0%   { box-shadow: 0 0 0 0   rgba(227,179,65,0.9); border-color: #e3b341; }
-  40%  { box-shadow: 0 0 20px 5px rgba(227,179,65,0.35); border-color: #e3b341; }
-  100% { box-shadow: none; }
+  0%   { box-shadow: 0 0 0 0 rgba(245,166,35,0.8); }
+  40%  { box-shadow: 0 0 0 6px rgba(245,166,35,0.3); }
+  100% { box-shadow: 0 0 0 0 rgba(245,166,35,0); }
 }
 
 @keyframes bidSlideIn {
@@ -55,34 +120,24 @@ html, body, #root {
   to   { transform: scaleX(1); opacity: 1; transform-origin: left; }
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes haltBannerPulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.82; }
-}
-
 @keyframes edgePulse {
-  0%, 100% { opacity: 0.2; }
-  50%       { opacity: 0.9; }
+  0%, 100% { opacity: 0.25; }
+  50%       { opacity: 1; }
 }
 
 @keyframes haltRipple {
   0%   { stroke-opacity: 1; stroke-width: 4; }
-  100% { stroke-opacity: 0.5; stroke-width: 1.5; }
+  100% { stroke-opacity: 0.45; stroke-width: 1.5; }
 }
 
 @keyframes sourceRippleExpand {
   from { transform: scale(1);  opacity: 0.9; }
-  to   { transform: scale(6);  opacity: 0; }
+  to   { transform: scale(5.5); opacity: 0; }
 }
 
 @keyframes nodeHaltGlow {
-  0%, 100% { filter: drop-shadow(0 0 6px  rgba(248,81,73,0.8)); }
-  50%       { filter: drop-shadow(0 0 20px rgba(248,81,73,1));   }
+  0%, 100% { filter: drop-shadow(0 0 5px  rgba(240,79,90,0.7)); }
+  50%       { filter: drop-shadow(0 0 18px rgba(240,79,90,1)); }
 }
 
 @keyframes toastIn {
@@ -93,4 +148,13 @@ html, body, #root {
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bannerIn {
+  from { opacity: 0; transform: translateY(-100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

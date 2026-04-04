@@ -17,7 +17,7 @@ use tokio::{
 };
 use tashi_vertex::{Context, Engine, KeySecret, Message, Peers, Socket};
 
-use types::{AgentState, SafetyHaltRequest, SwarmMessage, TaskBid};
+use types::{AgentState, SafetyHaltRequest, SwarmMessage, TaskBid, TaskNotification};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -45,6 +45,10 @@ struct HttpCtx {
     /// Channel to push safety-halt triggers received over HTTP back into
     /// the main loop so they are handled identically to mesh-sourced halts.
     halt_tx: tokio::sync::mpsc::Sender<SafetyHaltRequest>,
+    /// Reqwest client for outbound HTTP (bid POSTs from the /task handler).
+    http_client: reqwest::Client,
+    /// Backend base URL (e.g. "http://backend:3001").
+    backend_url: String,
 }
 
 // ── HTTP handlers (axum) ──────────────────────────────────────────────────────
@@ -59,6 +63,46 @@ async fn handle_safety_post(
         req.source_agent_id, req.fault_type
     );
     let _ = ctx.halt_tx.send(req).await;
+    StatusCode::OK
+}
+
+/// POST /task — backend notifies this agent of a new task for bidding.
+/// The handler reads current state, computes a bid score, and fires a
+/// non-blocking POST to /api/task-bid.  Agents that are halted or faulted
+/// skip bidding silently.
+async fn handle_task_post(
+    State(ctx): State<Arc<HttpCtx>>,
+    Json(req): Json<TaskNotification>,
+) -> StatusCode {
+    let state = ctx.agent_state.read().await;
+    if state.status == "halted" || state.status == "fault" {
+        return StatusCode::OK;
+    }
+    let battery    = state.battery;
+    let agent_id   = state.id.clone();
+    let agent_type = state.agent_type.clone();
+    let load       = if state.status == "working" { 0.6_f32 } else { 0.0_f32 };
+    drop(state);
+
+    let cap = auction::capability_match(&agent_type, None);
+    if let Some(bid) = auction::make_bid(&agent_id, &req.task_id, battery, load, cap, now_ms()) {
+        println!(
+            "[{}] bidding on task {} via HTTP  score={:.3}",
+            agent_id, req.task_id, bid.score
+        );
+        let client  = ctx.http_client.clone();
+        let backend = ctx.backend_url.clone();
+        tokio::spawn(async move {
+            if let Err(e) = client
+                .post(format!("{}/api/task-bid", backend))
+                .json(&bid)
+                .send()
+                .await
+            {
+                eprintln!("[task-bid] POST failed: {}", e);
+            }
+        });
+    }
     StatusCode::OK
 }
 
@@ -142,11 +186,19 @@ async fn main() -> anyhow::Result<()> {
         http_port,
     };
 
+    // ── HTTP client for backend POSTs ─────────────────────────────────────────
+    // Declared before HttpCtx so it can be shared with axum handlers.
+    let http_client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(5))
+        .build()?;
+
     // ── Shared state for HTTP server ──────────────────────────────────────────
     let (halt_tx, mut halt_rx) = tokio::sync::mpsc::channel::<SafetyHaltRequest>(16);
     let http_ctx = Arc::new(HttpCtx {
         agent_state: RwLock::new(initial_state.clone()),
         halt_tx,
+        http_client: http_client.clone(),
+        backend_url: backend_url.clone(),
     });
 
     // ── Spawn axum HTTP server (belt-and-suspenders safety inlet) ─────────────
@@ -154,6 +206,7 @@ async fn main() -> anyhow::Result<()> {
     tokio::spawn(async move {
         let app = Router::new()
             .route("/safety",  post(handle_safety_post))
+            .route("/task",    post(handle_task_post))
             .route("/healthz", axum::routing::get(healthz))
             .with_state(http_ctx_server);
         let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", http_port))
@@ -162,11 +215,6 @@ async fn main() -> anyhow::Result<()> {
         println!("[{}] HTTP safety-inlet on :{}", agent_id, http_port);
         axum::serve(listener, app).await.expect("HTTP server crashed");
     });
-
-    // ── HTTP client for backend POSTs ─────────────────────────────────────────
-    let http_client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(5))
-        .build()?;
 
     // ── Local mutable state (owned by main task only) ─────────────────────────
     let mut state = initial_state;

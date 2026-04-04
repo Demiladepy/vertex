@@ -77,3 +77,12 @@ pub struct SafetyHaltRequest {
     pub fault_type: String,
     pub detected_at_ms: u64,
 }
+
+// ── HTTP task-notification payload (received on /task) ────────────────────────
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TaskNotification {
+    pub task_id: String,
+    pub description: String,
+    pub posted_at_ms: u64,
+}

@@ -1,67 +1,116 @@
 .bar {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0.6rem;
-  padding: 0.75rem 1.25rem;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
-  flex-shrink: 0;
+  position: fixed;
+  top: var(--topbar-h);
+  left: 0;
+  right: 0;
+  z-index: 90;
+  display: flex;
+  align-items: stretch;
+  height: 72px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-dim);
+  transition: background 0.3s;
 }
 
+.barHalted {
+  background: rgba(240, 79, 90, 0.05);
+  border-bottom-color: rgba(240, 79, 90, 0.18);
+}
+
+/* ── Card ────────────────────────────────────────────────────────────────── */
 .card {
+  flex: 1;
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.6rem 0.85rem;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  transition: border-color 0.3s;
+  align-items: center;
+  gap: 12px;
+  padding: 0 20px;
+  border-right: 1px solid var(--border-dim);
   position: relative;
-  overflow: hidden;
+  transition: background 0.2s;
+}
+
+.card:last-child {
+  border-right: none;
 }
 
 .card::before {
   content: '';
   position: absolute;
-  left: 0; top: 0; bottom: 0;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
   width: 3px;
-  background: var(--border);
+  border-radius: 0 3px 3px 0;
+  background: transparent;
   transition: background 0.3s;
 }
 
-.healthy::before  { background: var(--green); }
-.amber::before    { background: var(--amber); }
-.critical::before { background: var(--red);   }
+/* ── Status accent strips ────────────────────────────────────────────────── */
+.green::before  { background: var(--green); }
+.amber::before  { background: var(--amber); }
+.red::before    { background: var(--red); }
+.blue::before   { background: var(--accent); }
 
-.healthy  { border-color: rgba(63,185,80,0.3); }
-.amber    { border-color: rgba(227,179,65,0.3); }
-.critical { border-color: rgba(248,81,73,0.3); }
+.green  { --icon-color: var(--green); }
+.amber  { --icon-color: var(--amber); }
+.red    { --icon-color: var(--red); }
+.blue   { --icon-color: var(--accent); }
+
+.iconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  color: var(--icon-color, var(--text-2));
+  flex-shrink: 0;
+  transition: color 0.3s, background 0.3s, border-color 0.3s;
+}
+
+.green  .iconWrap { background: var(--green-dim);  border-color: rgba(34,212,122,0.2); }
+.amber  .iconWrap { background: var(--amber-dim);  border-color: rgba(245,166,35,0.2); }
+.red    .iconWrap { background: var(--red-dim);    border-color: rgba(240,79,90,0.2); }
+.blue   .iconWrap { background: var(--accent-dim); border-color: rgba(61,132,245,0.2); }
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
 
 .value {
-  font-size: 1.45rem;
+  font-family: var(--font-mono);
+  font-size: 20px;
   font-weight: 700;
   color: var(--text);
-  line-height: 1.1;
-  letter-spacing: -0.5px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
 }
 
 .label {
-  font-size: 0.68rem;
+  font-size: 10px;
+  font-weight: 600;
   color: var(--text-2);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 
 .sub {
-  font-size: 0.62rem;
+  position: absolute;
+  bottom: 8px;
+  right: 14px;
+  font-size: 10px;
+  font-weight: 500;
   color: var(--text-3);
-  margin-top: 1px;
+  font-family: var(--font-mono);
 }
 
 @media (max-width: 900px) {
-  .bar { grid-template-columns: repeat(3, 1fr); }
-}
-@media (max-width: 600px) {
-  .bar { grid-template-columns: repeat(2, 1fr); }
+  .bar { overflow-x: auto; }
+  .card { min-width: 120px; }
 }

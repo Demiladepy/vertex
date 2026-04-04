@@ -127,13 +127,14 @@ app.post('/api/agent-state', (req, res) => {
 });
 
 // ── POST /api/task ────────────────────────────────────────────────────────────
-// Dashboard UI creates tasks here.
+// Dashboard UI (or the auto-seeder) creates tasks here.
 app.post('/api/task', (req, res) => {
   const { description, required_type } = req.body ?? {};
   if (!description) return res.status(400).json({ error: 'description required' });
 
   const id   = uuidv4();
   const task = state.createTask(id, description);
+  _lastTaskTime = Date.now(); // suppress auto-seeder for next 20 s
 
   const taskPosted = {
     task_id:       id,
@@ -144,7 +145,21 @@ app.post('/api/task', (req, res) => {
 
   broadcastEvent('TASK_POSTED', taskPosted);
 
-  // After 3 s collect bids and pick a winner.
+  // Fan-out the task to every known agent's /task HTTP endpoint so they can bid.
+  // Fire-and-forget: a slow or unreachable agent doesn't block the response.
+  const endpoints = state.getAllAgentEndpoints();
+  for (const [agentId, endpoint] of endpoints) {
+    fetch(`${endpoint}/task`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(taskPosted),
+      signal:  AbortSignal.timeout(1000),
+    }).catch(err => {
+      console.warn(`[task-fanout] could not reach ${agentId}: ${err.message}`);
+    });
+  }
+
+  // Collect bids for 3 s then resolve the auction.
   setTimeout(() => resolveAuction(id), 3000);
 
   res.json({ ok: true, task_id: id });
@@ -253,6 +268,75 @@ setInterval(() => {
   const m = state.recalcMetrics();
   broadcastEvent('METRICS_UPDATE', m);
 }, 5_000);
+
+// ── Offline detection (every 3 s) ─────────────────────────────────────────────
+// If an agent hasn't sent a heartbeat in 5 s, broadcast AGENT_OFFLINE so the
+// dashboard can mark it as disconnected without waiting for a full snapshot.
+
+setInterval(() => {
+  const now  = Date.now();
+  const THRESH = 7_000; // 7 s — agent heartbeat is 2 s, allow 3 missed ticks
+  for (const a of state.getAllAgents()) {
+    if (a.status === 'offline') continue;
+    const lastSeen = a.lastSeenMs ?? 0;
+    if (now - lastSeen > THRESH) {
+      state.markAgentOffline(a.id);
+      broadcastEvent('AGENT_OFFLINE', { agentId: a.id });
+      console.log(`[offline] ${a.id} marked offline (last seen ${Math.round((now - lastSeen) / 1000)}s ago)`);
+    }
+  }
+}, 3_000);
+
+// ── Demo auto-seeder (every 25 s) ─────────────────────────────────────────────
+// Posts a rotating task automatically so the dashboard shows live auction
+// activity without requiring manual input.  Only fires when ≥ 3 agents are
+// online and no task has been created in the last 20 s.
+
+const DEMO_TASKS = [
+  'Inspect sector 7B for obstacles',
+  'Deliver payload to drop-zone 3',
+  'Survey northern perimeter',
+  'Calibrate IMU sensors on grid A',
+  'Map thermal anomaly at waypoint 12',
+  'Relay telemetry to ground station',
+  'Recharge rendezvous at pad 2',
+  'Monitor airspace corridor delta',
+];
+let _demoIdx       = 0;
+let _lastTaskTime  = 0;
+
+setInterval(() => {
+  const agents    = state.getAllAgents();
+  const onlineCount = agents.filter(
+    a => a.status !== 'offline' && a.status !== 'halted' && a.status !== 'fault'
+  ).length;
+
+  if (onlineCount < 3) return;                        // not enough agents
+  if (Date.now() - _lastTaskTime < 20_000) return;   // recent manual task
+
+  const description = DEMO_TASKS[_demoIdx % DEMO_TASKS.length];
+  _demoIdx++;
+  _lastTaskTime = Date.now();
+
+  const id   = uuidv4();
+  const task = state.createTask(id, description);
+
+  const taskPosted = { task_id: id, description, required_type: null, posted_at_ms: task.posted_at };
+  broadcastEvent('TASK_POSTED', taskPosted);
+  console.log(`[auto-seeder] posted task "${description}"`);
+
+  const endpoints = state.getAllAgentEndpoints();
+  for (const [agentId, endpoint] of endpoints) {
+    fetch(`${endpoint}/task`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(taskPosted),
+      signal:  AbortSignal.timeout(1000),
+    }).catch(() => {});
+  }
+
+  setTimeout(() => resolveAuction(id), 3000);
+}, 25_000);
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 

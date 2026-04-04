@@ -1,52 +1,99 @@
-.section { display: flex; flex-direction: column; gap: 0.5rem; }
-
-.heading {
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-2);
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 0.75rem;
-}
-
-.empty { color: var(--text-3); font-size: 0.85rem; padding: 1rem 0; }
-
-/* ── Card ─────────────────────────────────────────────────────────────────── */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.8rem;
+.section {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
-  transition: border-color 0.2s;
+  gap: 10px;
 }
 
-.cardHalted {
-  border-color: var(--red) !important;
-  animation: haltBorderPulse 1.2s ease-in-out infinite;
-}
-
-.cardFlash {
-  animation: winFlash 0.8s ease-out forwards;
-}
-
-/* ── Card header ──────────────────────────────────────────────────────────── */
-.header {
+.heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.4rem;
+}
+
+.headingLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-2);
+}
+
+.headingCount {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* ── Grid ────────────────────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: var(--gap-sm);
+}
+
+/* ── Card ────────────────────────────────────────────────────────────────── */
+.card {
+  position: relative;
+  display: flex;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  min-height: 120px;
+}
+
+.card:hover {
+  border-color: var(--border-hi);
+}
+
+.cardOffline {
+  opacity: 0.45;
+}
+
+.cardHalted {
+  border-color: rgba(240,79,90,0.35) !important;
+  animation: haltBlink 1.6s ease-in-out infinite;
+}
+
+.cardFlash {
+  animation: winFlash 0.9s ease-out forwards;
+}
+
+/* ── Left accent bar ─────────────────────────────────────────────────────── */
+.accentBar {
+  width: 3px;
+  flex-shrink: 0;
+  background: var(--agent-color, var(--border));
+  opacity: 0.85;
+}
+
+.cardOffline .accentBar {
+  opacity: 0.2;
+  background: var(--border-hi);
+}
+
+/* ── Card inner ──────────────────────────────────────────────────────────── */
+.cardInner {
+  flex: 1;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* ── Top row ─────────────────────────────────────────────────────────────── */
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
 }
 
 .agentId {
-  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 12px;
   font-weight: 700;
   color: var(--text);
   white-space: nowrap;
@@ -55,83 +102,137 @@
 }
 
 .typeBadge {
-  font-size: 0.65rem;
+  font-size: 9px;
   font-weight: 600;
-  padding: 1px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
   border-radius: 4px;
   border: 1px solid;
   white-space: nowrap;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  flex-shrink: 0;
 }
 
-/* ── Battery ──────────────────────────────────────────────────────────────── */
+/* ── Status row ──────────────────────────────────────────────────────────── */
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusPill {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 7px 2px 5px;
+  border-radius: 20px;
+  border: 1px solid;
+}
+
+.statusDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.statusIdle    { color: var(--text-2); border-color: var(--border);              background: var(--bg-raised); }
+.statusWorking { color: var(--green);  border-color: rgba(34,212,122,0.25);      background: var(--green-dim); }
+.statusWorking .statusDot { animation: livePulse 1.2s ease-in-out infinite; }
+.statusFault   { color: var(--amber);  border-color: rgba(245,166,35,0.25);      background: var(--amber-dim); }
+.statusHalted  { color: var(--red);    border-color: rgba(240,79,90,0.25);       background: var(--red-dim); }
+.statusOffline { color: var(--text-3); border-color: var(--border-dim);           background: var(--bg-raised); }
+
+.bidScore {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--amber);
+  margin-left: auto;
+}
+
+/* ── Battery bar ─────────────────────────────────────────────────────────── */
 .batteryRow {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 6px;
 }
 
 .batteryTrack {
   flex: 1;
-  height: 6px;
-  background: var(--border);
-  border-radius: 3px;
+  height: 3px;
+  background: var(--bg-raised);
+  border-radius: 2px;
   overflow: hidden;
 }
 
 .batteryFill {
   height: 100%;
-  border-radius: 3px;
-  transition: width 0.6s ease, background 0.6s ease;
+  border-radius: 2px;
+  transition: width 0.5s ease, background 0.3s;
 }
 
 .batteryLabel {
-  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
   color: var(--text-2);
-  width: 3.2rem;
+  min-width: 28px;
   text-align: right;
-  flex-shrink: 0;
 }
 
-/* ── Status row ───────────────────────────────────────────────────────────── */
-.statusRow {
+/* ── Task line ───────────────────────────────────────────────────────────── */
+.taskLine {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.taskArrow {
+  color: var(--accent);
+  font-size: 10px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.taskText {
+  font-size: 10px;
+  color: var(--text-2);
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* ── Latency ─────────────────────────────────────────────────────────────── */
+.latencyLine {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.4rem;
+  gap: 4px;
+  margin-top: auto;
 }
 
-.statusPill {
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 999px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.idle    { background: rgba(63,185,80,0.15);  color: var(--green); }
-.working { background: rgba(88,166,255,0.15); color: var(--blue);  }
-.fault   { background: rgba(227,179,65,0.15); color: var(--amber); }
-.halted  { background: rgba(248,81,73,0.2);   color: var(--red);   }
-
-.bidScore {
-  font-size: 0.68rem;
+.latencyVal {
+  font-family: var(--font-mono);
+  font-size: 10px;
   color: var(--text-3);
 }
 
-/* ── Current task ─────────────────────────────────────────────────────────── */
-.currentTask {
-  font-size: 0.72rem;
-  color: var(--blue);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.latencyLabel {
+  font-size: 9px;
+  color: var(--text-3);
 }
 
-.latency {
-  font-size: 0.65rem;
+/* ── Offline placeholder ─────────────────────────────────────────────────── */
+.offlinePlaceholder {
+  font-size: 11px;
   color: var(--text-3);
-  text-align: right;
+  font-style: italic;
+  margin-top: auto;
+  padding-top: 4px;
 }

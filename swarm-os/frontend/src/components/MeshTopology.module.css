@@ -1,64 +1,85 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 10px;
 }
 
 .heading {
-  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headingLabel {
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   color: var(--text-2);
 }
 
+.headingCount {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+}
+
 .svgWrap {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   width: 100%;
   aspect-ratio: 1;
 }
 
-/* ── SVG elements ─────────────────────────────────────────────────────────── */
+/* ── Edges ───────────────────────────────────────────────────────────────── */
 
-.edgeLine {
-  stroke: #2d3148;
+.edge {
+  stroke: #1a2438;
   stroke-width: 1.5;
-  transition: stroke 0.2s;
+  transition: stroke 0.25s;
 }
 
 .edgePulsing {
-  stroke: var(--blue);
+  stroke: var(--accent);
   stroke-width: 2;
   animation: edgePulse 0.5s ease-in-out;
 }
 
 .edgeHalt {
   stroke: var(--red);
+  stroke-width: 2;
   animation: haltRipple 0.4s ease-out forwards;
 }
 
-/* Node base */
+.edgeOffline {
+  stroke: #141c2b;
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+  opacity: 0.5;
+}
+
+/* ── Nodes ───────────────────────────────────────────────────────────────── */
+
 .nodeCircle {
-  stroke: #2d3148;
-  stroke-width: 2;
-  transition: fill 0.4s, stroke 0.3s;
+  stroke: none;
+  transition: fill 0.35s;
 }
 
 .nodeHalted {
-  stroke: var(--red);
-  stroke-width: 3;
   animation: nodeHaltGlow 1.4s ease-in-out infinite;
 }
 
 .nodeFault {
-  stroke: var(--amber);
-  stroke-width: 2.5;
+  filter: drop-shadow(0 0 6px rgba(245,166,35,0.5));
 }
 
-/* Source ripple circle — child of node <g> */
+.nodeOffline {
+  /* no extra styles — handled inline */
+}
+
+/* Source ripple on safety halt */
 .sourceRipple {
   fill: none;
   stroke: var(--red);
@@ -69,28 +90,28 @@
 
 /* Labels */
 .nodeId {
-  font-family: var(--font);
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: 10px;
   font-weight: 700;
-  fill: var(--text);
+  fill: #dce8f5;
   dominant-baseline: middle;
   text-anchor: middle;
   pointer-events: none;
 }
 
 .nodeType {
-  font-family: var(--font);
-  font-size: 9px;
-  fill: var(--text-2);
+  font-family: var(--font-ui);
+  font-size: 8px;
+  fill: rgba(220,232,245,0.55);
   dominant-baseline: middle;
   text-anchor: middle;
   pointer-events: none;
 }
 
-/* Latency label on edges */
+/* Latency label on halt edges */
 .latencyLabel {
-  font-family: var(--font);
-  font-size: 9px;
+  font-family: var(--font-mono);
+  font-size: 8px;
   fill: var(--red);
   dominant-baseline: middle;
   text-anchor: middle;

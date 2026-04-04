@@ -47,7 +47,7 @@ function upsertAgent(agentState) {
     // Derive host from Docker service name convention (id == service name).
     // Falls back to 'localhost' for local dev.
     const host = process.env.AGENT_NETWORK === 'docker'
-      ? agentState.id
+      ? `agent-${agentState.id}`   // Docker service names: agent-drone-1, agent-amr-1, etc.
       : 'localhost';
     agentHttpEndpoints.set(agentState.id, `http://${host}:${agentState.http_port}`);
   }
@@ -56,6 +56,12 @@ function upsertAgent(agentState) {
 function getAgent(id) { return agents.get(id) ?? null; }
 function getAllAgents() { return Array.from(agents.values()); }
 function getAllAgentEndpoints() { return new Map(agentHttpEndpoints); }
+
+/** Mark a single agent as offline (used by the offline-detection interval). */
+function markAgentOffline(id) {
+  const agent = agents.get(id);
+  if (agent) agents.set(id, { ...agent, status: 'offline' });
+}
 
 /** Set every non-halted agent to idle (used by /api/recover). */
 function recoverAllAgents() {
@@ -234,6 +240,7 @@ module.exports = {
   getAgent,
   getAllAgents,
   getAllAgentEndpoints,
+  markAgentOffline,
   recoverAllAgents,
   // Tasks
   createTask,

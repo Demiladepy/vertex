@@ -1,135 +1,225 @@
 .section {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  min-height: 0;
+  gap: 10px;
   flex: 1;
+  min-height: 0;
 }
 
 .heading {
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-2);
-  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
+.headingLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-2);
+}
+
+.headingCount {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* ── Feed container ─────────────────────────────────────────────────────── */
 .feed {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 6px;
   overflow-y: auto;
-  flex: 1;
-  min-height: 0;
-  padding-right: 2px;
+  max-height: 560px;
 }
 
-.empty { color: var(--text-3); font-size: 0.85rem; padding: 0.5rem 0; }
-
-/* ── Task row ─────────────────────────────────────────────────────────────── */
-.taskRow {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.65rem 0.8rem;
+/* ── Task row ────────────────────────────────────────────────────────────── */
+.row {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius);
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  animation: fadeIn 0.25s ease-out;
-  flex-shrink: 0;
+  gap: 6px;
+  animation: fadeUp 0.25s ease-out;
+  transition: border-color 0.2s;
 }
 
-.topLine {
+.row:hover {
+  border-color: var(--border);
+}
+
+.rowDone {
+  border-left: 3px solid var(--green);
+}
+
+/* ── Row header ──────────────────────────────────────────────────────────── */
+.rowHeader {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .taskDesc {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--text);
+  line-height: 1.4;
   flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.rowMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .taskAge {
-  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  font-size: 10px;
   color: var(--text-3);
-  flex-shrink: 0;
 }
 
-.statusBadge {
-  font-size: 0.65rem;
-  font-weight: 600;
-  padding: 2px 7px;
-  border-radius: 4px;
+/* ── Status badge ────────────────────────────────────────────────────────── */
+.badge {
+  font-size: 9px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  flex-shrink: 0;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid;
 }
 
-.open       { background: rgba(88,166,255,0.12);  color: var(--blue);  }
-.collecting { background: rgba(227,179,65,0.15);  color: var(--amber); }
-.assigned   { background: rgba(63,185,80,0.15);   color: var(--green); }
-.done       { background: rgba(72,79,88,0.3);     color: var(--text-3);}
+.badgeOpen      { color: var(--text-2); border-color: var(--border);        background: var(--bg-raised); }
+.badgeBidding   { color: var(--amber);  border-color: rgba(245,166,35,0.3); background: var(--amber-dim); }
+.badgeAssigned  { color: var(--accent); border-color: rgba(61,132,245,0.3); background: var(--accent-dim); }
+.badgeCompleted { color: var(--green);  border-color: rgba(34,212,122,0.3); background: var(--green-dim); }
+.badgeFailed    { color: var(--red);    border-color: rgba(240,79,90,0.3);  background: var(--red-dim); }
 
-/* ── Winner line ──────────────────────────────────────────────────────────── */
+/* ── Winner / bidding state ──────────────────────────────────────────────── */
 .winnerLine {
-  font-size: 0.72rem;
-  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.winnerId   { color: var(--green); font-weight: 600; }
-.bidding    { color: var(--amber); font-style: italic; }
+.winner {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green);
+}
 
-/* ── Bid bars ─────────────────────────────────────────────────────────────── */
+.biddingTag {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--amber);
+}
+
+.biddingDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: livePulse 1s ease-in-out infinite;
+}
+
+.waitingTag {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* ── Bid bars ────────────────────────────────────────────────────────────── */
 .bidBars {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
+  margin-top: 2px;
 }
 
 .bidRow {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.65rem;
+  gap: 8px;
 }
 
 .bidAgent {
+  font-family: var(--font-mono);
+  font-size: 9px;
   color: var(--text-2);
-  width: 88px;
+  min-width: 54px;
   flex-shrink: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.bidBarTrack {
+.bidTrack {
   flex: 1;
-  height: 5px;
-  background: var(--border);
-  border-radius: 3px;
+  height: 4px;
+  background: var(--bg-raised);
+  border-radius: 2px;
   overflow: hidden;
 }
 
-.bidBarFill {
+.bidFill {
   height: 100%;
-  background: var(--blue);
-  border-radius: 3px;
+  border-radius: 2px;
+  animation: bidSlideIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
   transform-origin: left;
-  animation: bidSlideIn 0.4s ease-out;
 }
 
-.bidScoreLabel {
-  color: var(--text-3);
-  width: 2.8rem;
+.bidScore {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-2);
+  min-width: 36px;
   text-align: right;
-  flex-shrink: 0;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────────── */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+}
+
+.emptyTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.emptySub {
+  font-size: 11px;
+  color: var(--text-3);
+  max-width: 200px;
+  line-height: 1.5;
 }

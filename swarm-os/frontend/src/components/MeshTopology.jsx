@@ -3,9 +3,9 @@ import styles from './MeshTopology.module.css';
 
 // ── Layout constants ──────────────────────────────────────────────────────────
 
-const CX = 250, CY = 255, R = 168, NODE_R = 30;
+const W = 300, H = 300;
+const CX = 150, CY = 155, R = 108, NODE_R = 26;
 
-// Fixed pentagon slots — clockwise from top
 const SLOTS = ['drone-1', 'drone-2', 'amr-1', 'ground-station-1', 'iot-sensor-1'];
 
 const POSITIONS = Object.fromEntries(
@@ -19,13 +19,13 @@ const POSITIONS = Object.fromEntries(
 );
 
 const TYPE_COLORS = {
-  drone:          '#58a6ff',
-  amr:            '#3fb950',
-  ground_station: '#e3b341',
-  iot_sensor:     '#a371f7',
+  drone:          '#60b4ff',
+  amr:            '#22d47a',
+  ground_station: '#f5a623',
+  iot_sensor:     '#a78bfa',
 };
 
-// All unique pairs: C(5,2) = 10 edges
+// All unique pairs
 const ALL_EDGES = [];
 for (let i = 0; i < SLOTS.length; i++) {
   for (let j = i + 1; j < SLOTS.length; j++) {
@@ -38,32 +38,22 @@ const edgeKey = (a, b) => [a, b].sort().join('|');
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function MeshTopology({ agents, lastHalt, lastAck, lastActivity }) {
-  // Set of edge keys currently pulsing from recent message traffic
   const [pulsingEdges, setPulsingEdges] = useState(new Set());
-  // Map edgeKey → { latencyMs: number|null, animKey: number }
-  const [haltEdges, setHaltEdges] = useState(new Map());
-  // Whether to show the source-node ripple circle
+  const [haltEdges,    setHaltEdges]    = useState(new Map());
   const [haltSourceId, setHaltSourceId] = useState(null);
 
   const prevActivityRef = useRef({});
   const pulseTimers     = useRef(new Map());
   const haltTimers      = useRef([]);
 
-  // ── Activity pulse: fires when any agent sends a heartbeat ─────────────────
+  // ── Activity pulse ───────────────────────────────────────────────────────
   useEffect(() => {
     const prev = prevActivityRef.current;
     prevActivityRef.current = lastActivity;
-
     for (const [agentId, ts] of Object.entries(lastActivity)) {
       if (prev[agentId] === ts) continue;
-
-      // Activate all edges touching this agent
-      const edgeKeys = SLOTS
-        .filter(id => id !== agentId)
-        .map(id => edgeKey(agentId, id));
-
+      const edgeKeys = SLOTS.filter(id => id !== agentId).map(id => edgeKey(agentId, id));
       setPulsingEdges(s => new Set([...s, ...edgeKeys]));
-
       edgeKeys.forEach(key => {
         clearTimeout(pulseTimers.current.get(key));
         pulseTimers.current.set(key, setTimeout(() => {
@@ -73,44 +63,31 @@ export default function MeshTopology({ agents, lastHalt, lastAck, lastActivity }
     }
   }, [lastActivity]);
 
-  // ── Halt ripple: fires on SAFETY_HALT ─────────────────────────────────────
+  // ── Halt ripple ──────────────────────────────────────────────────────────
   useEffect(() => {
     haltTimers.current.forEach(clearTimeout);
     haltTimers.current = [];
-
-    if (!lastHalt) {
-      setHaltEdges(new Map());
-      setHaltSourceId(null);
-      return;
-    }
+    if (!lastHalt) { setHaltEdges(new Map()); setHaltSourceId(null); return; }
 
     const srcId  = lastHalt.source_agent_id;
     const others = SLOTS.filter(id => id !== srcId);
-
     setHaltEdges(new Map());
     setHaltSourceId(srcId);
 
     others.forEach((targetId, idx) => {
-      const key   = edgeKey(srcId, targetId);
-      const delay = idx * 80;
-      const t = setTimeout(() => {
-        setHaltEdges(prev => {
-          const next = new Map(prev);
-          next.set(key, { latencyMs: null, animKey: Date.now() });
-          return next;
-        });
-      }, delay);
+      const key = edgeKey(srcId, targetId);
+      const t   = setTimeout(() => {
+        setHaltEdges(prev => new Map(prev).set(key, { latencyMs: null, animKey: Date.now() }));
+      }, idx * 80);
       haltTimers.current.push(t);
     });
 
-    // Clear the source ripple circle after its animation finishes
-    const clearRipple = setTimeout(() => setHaltSourceId(null), 1200);
-    haltTimers.current.push(clearRipple);
-
+    const clear = setTimeout(() => setHaltSourceId(null), 1200);
+    haltTimers.current.push(clear);
     return () => haltTimers.current.forEach(clearTimeout);
   }, [lastHalt?._seq]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Update latency labels when ACKs arrive ─────────────────────────────────
+  // ── Latency labels ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!lastAck || !lastHalt) return;
     const key = edgeKey(lastHalt.source_agent_id, lastAck.agent_id);
@@ -122,22 +99,28 @@ export default function MeshTopology({ agents, lastHalt, lastAck, lastActivity }
 
   return (
     <section className={styles.section}>
-      <span className={styles.heading}>Mesh topology</span>
+      <div className={styles.heading}>
+        <span className={styles.headingLabel}>Mesh topology</span>
+        <span className={styles.headingCount}>{SLOTS.length} nodes</span>
+      </div>
       <div className={styles.svgWrap}>
         <svg
-          viewBox="0 0 500 510"
+          viewBox={`0 0 ${W} ${H}`}
           width="100%"
           height="100%"
           preserveAspectRatio="xMidYMid meet"
         >
           {/* ── Edges ─────────────────────────────────────────────────── */}
           {ALL_EDGES.map(([a, b]) => {
-            const key  = edgeKey(a, b);
-            const posA = POSITIONS[a] ?? { x: CX, y: CY };
-            const posB = POSITIONS[b] ?? { x: CX, y: CY };
-            const halt = haltEdges.get(key);
-            const mx   = (posA.x + posB.x) / 2;
-            const my   = (posA.y + posB.y) / 2;
+            const key      = edgeKey(a, b);
+            const posA     = POSITIONS[a];
+            const posB     = POSITIONS[b];
+            const halt     = haltEdges.get(key);
+            const mx       = (posA.x + posB.x) / 2;
+            const my       = (posA.y + posB.y) / 2;
+            const aOffline = !agents[a] || agents[a]?.status === 'offline';
+            const bOffline = !agents[b] || agents[b]?.status === 'offline';
+            const isOffline = aOffline || bOffline;
 
             return (
               <g key={key}>
@@ -145,20 +128,20 @@ export default function MeshTopology({ agents, lastHalt, lastAck, lastActivity }
                   x1={posA.x} y1={posA.y}
                   x2={posB.x} y2={posB.y}
                   className={[
-                    styles.edgeLine,
-                    pulsingEdges.has(key) ? styles.edgePulsing : '',
-                    halt ? styles.edgeHalt : '',
-                  ].join(' ')}
-                  // reset animation when halt fires repeatedly
+                    styles.edge,
+                    isOffline             ? styles.edgeOffline  : '',
+                    pulsingEdges.has(key) ? styles.edgePulsing  : '',
+                    halt && !isOffline    ? styles.edgeHalt     : '',
+                  ].filter(Boolean).join(' ')}
                   key={halt ? `${key}-${halt.animKey}` : key}
                 />
-                {halt && halt.latencyMs != null && (
-                  <text x={mx} y={my - 6} className={styles.latencyLabel}>
+                {halt && !isOffline && halt.latencyMs != null && (
+                  <text x={mx} y={my - 5} className={styles.latencyLabel}>
                     {halt.latencyMs}ms
                   </text>
                 )}
-                {halt && halt.latencyMs == null && (
-                  <text x={mx} y={my - 6} className={styles.latencyLabel}>…</text>
+                {halt && !isOffline && halt.latencyMs == null && (
+                  <text x={mx} y={my - 5} className={styles.latencyLabel}>…</text>
                 )}
               </g>
             );
@@ -169,14 +152,36 @@ export default function MeshTopology({ agents, lastHalt, lastAck, lastActivity }
             const pos    = POSITIONS[slotId];
             const agent  = agents[slotId];
             const status = agent?.status ?? 'offline';
-            const fill   = status === 'halted' ? '#f85149'
-                         : status === 'fault'  ? '#e3b341'
-                         : TYPE_COLORS[agent?.agent_type] ?? '#484f58';
+            const typeColor = TYPE_COLORS[agent?.agent_type] ?? '#3d4f63';
+
+            const fill = status === 'halted'  ? '#ef4444'
+                       : status === 'fault'   ? '#f5a623'
+                       : status === 'offline' ? '#0f1520'
+                       : typeColor;
+
+            const fillOpacity = status === 'offline' ? 1
+                              : agent ? 1 : 0.25;
+
             const isHaltSrc = haltSourceId === slotId;
+
+            // Short label: "D1", "AMR", "GS", "IOT"
+            const shortId = slotId.replace('drone-', 'D').replace('amr-', 'AMR').replace('ground-station-', 'GS').replace('iot-sensor-', 'IOT');
 
             return (
               <g key={slotId} transform={`translate(${pos.x},${pos.y})`}>
-                {/* Expanding ripple from halt source */}
+
+                {/* Glow ring for active/online nodes */}
+                {agent && status !== 'offline' && status !== 'halted' && (
+                  <circle
+                    r={NODE_R + 7}
+                    fill="none"
+                    stroke={typeColor}
+                    strokeWidth="1"
+                    opacity="0.2"
+                  />
+                )}
+
+                {/* Halt source ripple */}
                 {isHaltSrc && (
                   <circle
                     r={NODE_R}
@@ -185,47 +190,80 @@ export default function MeshTopology({ agents, lastHalt, lastAck, lastActivity }
                   />
                 )}
 
-                {/* Node body */}
+                {/* Node body — solid fill, no wireframe dashes */}
                 <circle
                   r={NODE_R}
                   fill={fill}
-                  fillOpacity={agent ? 1 : 0.25}
+                  fillOpacity={fillOpacity}
                   className={[
                     styles.nodeCircle,
-                    status === 'halted' ? styles.nodeHalted : '',
-                    status === 'fault'  ? styles.nodeFault  : '',
-                  ].join(' ')}
+                    status === 'halted'  ? styles.nodeHalted  : '',
+                    status === 'fault'   ? styles.nodeFault   : '',
+                    status === 'offline' ? styles.nodeOffline : '',
+                  ].filter(Boolean).join(' ')}
                 />
 
-                {/* Agent ID label */}
-                <text y={-6} className={styles.nodeId}>
-                  {slotId}
-                </text>
+                {/* Offline: border ring only */}
+                {status === 'offline' && (
+                  <circle r={NODE_R} fill="none" stroke="#1c2840" strokeWidth="1.5" strokeDasharray="4 3" />
+                )}
 
-                {/* Type sub-label */}
-                <text y={8} className={styles.nodeType}>
-                  {agent?.agent_type ?? 'offline'}
-                </text>
+                {/* Offline X mark */}
+                {status === 'offline' && (
+                  <g>
+                    <line x1={-8} y1={-8} x2={8} y2={8}  stroke="#2f3f55" strokeWidth="2" strokeLinecap="round" />
+                    <line x1={8}  y1={-8} x2={-8} y2={8} stroke="#2f3f55" strokeWidth="2" strokeLinecap="round" />
+                  </g>
+                )}
 
-                {/* Battery micro-bar below the node */}
-                {agent && (
-                  <rect
-                    x={-NODE_R} y={NODE_R + 5}
-                    width={NODE_R * 2} height={4}
-                    rx={2}
-                    fill="#2d3148"
+                {/* Status indicator dot (top-right of circle) */}
+                {agent && status !== 'offline' && (
+                  <circle
+                    cx={NODE_R * 0.72}
+                    cy={-NODE_R * 0.72}
+                    r={4}
+                    fill={
+                      status === 'halted'  ? '#ef4444'
+                      : status === 'fault'  ? '#f5a623'
+                      : status === 'working'? '#22d47a'
+                      : '#60b4ff'
+                    }
+                    stroke="#0b0f18"
+                    strokeWidth="1.5"
                   />
                 )}
-                {agent && (
-                  <rect
-                    x={-NODE_R} y={NODE_R + 5}
-                    width={Math.max(0, (agent.battery / 100) * NODE_R * 2)} height={4}
-                    rx={2}
-                    fill={
-                      agent.battery > 50 ? '#3fb950'
-                      : agent.battery > 30 ? '#e3b341' : '#f85149'
-                    }
-                  />
+
+                {/* Short ID label */}
+                <text y={status === 'offline' ? 4 : -2} className={styles.nodeId}>
+                  {shortId}
+                </text>
+
+                {/* Agent type sub-label (only when online) */}
+                {agent && status !== 'offline' && (
+                  <text y={10} className={styles.nodeType}>
+                    {agent.agent_type?.replace('_', ' ')}
+                  </text>
+                )}
+
+                {/* Battery micro-bar */}
+                {agent && status !== 'offline' && (
+                  <>
+                    <rect
+                      x={-NODE_R + 2} y={NODE_R + 5}
+                      width={(NODE_R - 2) * 2} height={3}
+                      rx={1.5}
+                      fill="#141c2b"
+                    />
+                    <rect
+                      x={-NODE_R + 2} y={NODE_R + 5}
+                      width={Math.max(0, (agent.battery / 100) * ((NODE_R - 2) * 2))} height={3}
+                      rx={1.5}
+                      fill={
+                        agent.battery > 50 ? '#22d47a'
+                        : agent.battery > 30 ? '#f5a623' : '#ef4444'
+                      }
+                    />
+                  </>
                 )}
               </g>
             );

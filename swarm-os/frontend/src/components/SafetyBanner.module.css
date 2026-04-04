@@ -1,0 +1,138 @@
+.banner {
+  position: fixed;
+  top: var(--topbar-h);
+  left: 0;
+  right: 0;
+  z-index: 95;
+  background: rgba(240, 79, 90, 0.1);
+  border-bottom: 1px solid rgba(240, 79, 90, 0.35);
+  backdrop-filter: blur(8px);
+  animation: bannerIn 0.3s ease-out;
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 20px;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* ── Left ────────────────────────────────────────────────────────────────── */
+.left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background: rgba(240,79,90,0.18);
+  border: 1px solid rgba(240,79,90,0.35);
+  color: var(--red);
+  animation: haltBlink 1.4s ease-in-out infinite;
+}
+
+.msg {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--red);
+}
+
+.detail {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(220,232,245,0.75);
+}
+
+/* ── Propagation chips ───────────────────────────────────────────────────── */
+.chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  overflow: hidden;
+  flex-wrap: wrap;
+}
+
+.chipsLabel {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(240,79,90,0.1);
+  border: 1px solid rgba(240,79,90,0.2);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  animation: fadeUp 0.25s ease-out;
+}
+
+.chipId {
+  color: var(--text-2);
+}
+
+.chipMs {
+  color: var(--red);
+  font-weight: 700;
+}
+
+/* ── Right ───────────────────────────────────────────────────────────────── */
+.right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.eventCount {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.recoverBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green);
+  background: var(--green-dim);
+  border: 1px solid rgba(34,212,122,0.3);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.recoverBtn:hover {
+  background: rgba(34,212,122,0.2);
+  border-color: rgba(34,212,122,0.5);
+}
